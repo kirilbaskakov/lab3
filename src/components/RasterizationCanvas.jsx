@@ -43,24 +43,27 @@ const RasterizationCanvas = ({ width, height }) => {
         const startTime = performance.now(); 
         const dx = Math.abs(x1 - x0);
         const dy = Math.abs(y1 - y0);
-        const sx = (x0 < x1) ? 1 : -1;
-        const sy = (y0 < y1) ? 1 : -1;
-        let err = dx - dy;
-
+        let err = 0;
+        let derr = (dy + 1) / (dx + 1);
+        let y = y0;
+        let diry = y1 - y0;
+        if (diry > 0) {
+            diry = 1;
+        }
+        if (diry < 0) {
+            diry = -1;
+        }
         let pixels = 0;
-        while (x0 != x1 || y0 != y1) {
-            drawPixel(ctx, x0, y0, colorBresenham);
+        for (let x = x0; x <= x1; x++) {
+            drawPixel(ctx, x, y, colorBresenham);
             pixels++;
-            const err2 = err * 2;
-            if (err2 > -dy) {
-                err -= dy;
-                x0 += sx;
+            err += derr;
+            while (err >= 1.0) {
+                y = y + diry;
+                drawPixel(ctx, x, y, colorBresenham);
+                err -= 1;
             }
-            if (err2 < dx) {
-                err += dx;
-                y0 += sy;
-            }
-        };
+        }
         const endTime = performance.now();
         setReport(report => report + `Алгоритм Брезенхема. Время выполнения: ${(endTime - startTime).toFixed(2)} мс. Количество пикселей: ${pixels}\n`);
     };
